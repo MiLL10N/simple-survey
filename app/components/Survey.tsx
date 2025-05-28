@@ -488,6 +488,7 @@ export default function SurveyComponent() {
                 (sessionAnswers) =>
                   Array.isArray(sessionAnswers) &&
                   sessionAnswers.every(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (ans: any): ans is UserAnswer =>
                       typeof ans.sessionId === "string" &&
                       typeof ans.timestamp === "number" &&
@@ -496,6 +497,7 @@ export default function SurveyComponent() {
                       typeof ans.selectedAnswerInSessionLanguage === "string" &&
                       Array.isArray(ans.selectedOptionIds) &&
                       ans.selectedOptionIds.every(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (id: any) => typeof id === "string"
                       ) &&
                       (ans.languageOfSubmission === "en" ||
@@ -522,12 +524,6 @@ export default function SurveyComponent() {
       return {}; // Default to an empty object
     });
 
-  const [totalSessionsCompleted, setTotalSessionsCompleted] = useState<number>(
-    () => {
-      // This will be properly initialized in an effect after allSurveyResponses is loaded
-      return 0;
-    }
-  );
   const [lastCompletedSessionAnswers, setLastCompletedSessionAnswers] =
     useState<UserAnswer[] | null>(null);
   const animatedBoxRef = useRef<HTMLDivElement>(null); // Renamed and will be moved to the outer box
@@ -535,10 +531,6 @@ export default function SurveyComponent() {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Initialize totalSessionsCompleted based on loaded allSurveyResponses
-  useEffect(() => {
-    setTotalSessionsCompleted(Object.keys(allSurveyResponses).length);
-  }, [allSurveyResponses]);
-
   const totalMainQuestions = useMemo(
     () => questionsData.filter((q) => !q.required_id).length,
     [] // questionsData is static, so this runs once
@@ -564,10 +556,7 @@ export default function SurveyComponent() {
       // Attempted to go beyond the last question, means survey is finished.
       if (userAnswers.length > 0 && !showCompletionScreen) {
         // currentSessionId here is the ID of the session that just completed.
-        setAllSurveyResponses((prevMap) => {
-          const newMap = { ...prevMap, [currentSessionId]: userAnswers };
-          // Update totalSessionsCompleted based on the new map's size
-          setTotalSessionsCompleted(Object.keys(newMap).length);
+        setAllSurveyResponses((prevMap) => {          const newMap = { ...prevMap, [currentSessionId]: userAnswers };          
           return newMap;
         });
         setLastCompletedSessionAnswers(userAnswers);
@@ -697,11 +686,7 @@ export default function SurveyComponent() {
     setCurrentQuestionIndex(0); // Attempt to go to the first question. useEffect will skip if needed.
     setShowCompletionScreen(false); // Hide the completion screen
     setLastCompletedSessionAnswers(null);
-    setCurrentSessionId(generateNewSessionId());
-    // If you want to reset the session count on a full "restart" of the app's data,
-    // you might consider uncommenting the next line.
-    // However, typically, this count would persist like allSurveyResponses.
-    // setTotalSessionsCompleted(0);
+    setCurrentSessionId(generateNewSessionId());    
     // allSurveyResponses persists across restarts within the same session
   };
 
