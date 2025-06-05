@@ -18,9 +18,6 @@ import {
   findNextDisplayableQuestionIndex,
   generateNewSessionId,
 } from "../lib/survey.utils";
-import {
-  uploadSurveyDataToOBS
-} from "../lib/obs.utils";
 
 export default function SurveyComponent() {
   const [currentLanguage, setCurrentLanguage] = useState<"en" | "th">("th"); // Default server-renderable value
