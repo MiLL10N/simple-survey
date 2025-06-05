@@ -19,6 +19,7 @@ interface SurveyQuestionViewProps {
   ) => number;
   currentQuestionIndex: number;
   userAnswers: UserAnswer[];
+  isOptional?: boolean;
 }
 
 const SurveyQuestionView: React.FC<SurveyQuestionViewProps> = ({
@@ -34,6 +35,7 @@ const SurveyQuestionView: React.FC<SurveyQuestionViewProps> = ({
   findNextDisplayableQuestionIndex,
   currentQuestionIndex,
   userAnswers,
+  isOptional,
 }) => {
   return (
     <>
@@ -65,13 +67,20 @@ const SurveyQuestionView: React.FC<SurveyQuestionViewProps> = ({
         {totalMainQuestions > 0 && currentQuestion && (
           <div className="mb-4">
             <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 text-right">
-              {getTranslatedText(uiStrings.progressText, currentLanguage)
-                .replace("{answered}", answeredMainQuestions.toString())
-                .replace("{total}", totalMainQuestions.toString())}
+              {isOptional
+                ? getTranslatedText(
+                    uiStrings.optionalQuestionProgressLabel,
+                    currentLanguage
+                  )
+                : getTranslatedText(uiStrings.progressText, currentLanguage)
+                    .replace("{answered}", answeredMainQuestions.toString())
+                    .replace("{total}", totalMainQuestions.toString())}
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
               <div
-                className="bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+                className={`${
+                  isOptional ? "bg-teal-500" : "bg-blue-500" // Changed color for optional
+                } h-2.5 rounded-full transition-all duration-300 ease-out`}
                 style={{
                   width: `${
                     (answeredMainQuestions / totalMainQuestions) * 100
@@ -82,11 +91,16 @@ const SurveyQuestionView: React.FC<SurveyQuestionViewProps> = ({
           </div>
         )}
         <div className="mb-6">
-          <p className="text-md sm:text-lg text-gray-700 dark:text-gray-300">
+          <p className="text-md sm:text-lg text-gray-700 dark:text-gray-300 flex items-center">
             {currentQuestion
               ? getTranslatedText(currentQuestion.text, currentLanguage)
               : ""}
           </p>
+          {isOptional && currentQuestion && (
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {getTranslatedText(uiStrings.optionalIndicator, currentLanguage)}
+            </span>
+          )}
         </div>
         <div className="space-y-3 mb-8">
           {currentQuestion?.options.map((optionObj) => (

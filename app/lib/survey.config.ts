@@ -339,4 +339,12 @@ export const uiStrings: Record<string, TranslatedText> = {
     en: "Answer:",
     th: "คำตอบ:",
   },
+  optionalIndicator: {
+    en: "(Optional)",
+    th: "(ตัวเลือก)",
+  },
+  optionalQuestionProgressLabel: {
+    en: "Optional Follow-up",
+    th: "คำถามต่อเนื่อง (ตัวเลือก)",
+  },
 };

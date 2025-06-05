@@ -4,10 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import SurveyQuestionView from "./SurveyQuestionView";
 import SurveyCompletionView from "./SurveyCompletionView";
 import NoApplicableQuestionsView from "./NoApplicableQuestionsView";
-import {
-  UserAnswer,
-  AllSurveyResponsesMap,
-} from "../lib/survey.types";
+import { UserAnswer, AllSurveyResponsesMap } from "../lib/survey.types";
 import {
   questionsData,
   ANIMATION_IN_CLASS,
@@ -21,6 +18,9 @@ import {
   findNextDisplayableQuestionIndex,
   generateNewSessionId,
 } from "../lib/survey.utils";
+import {
+  uploadSurveyDataToOBS
+} from "../lib/obs.utils";
 
 export default function SurveyComponent() {
   const [currentLanguage, setCurrentLanguage] = useState<"en" | "th">("th"); // Default server-renderable value
@@ -176,12 +176,7 @@ export default function SurveyComponent() {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1); // This will re-trigger the effect.
     }
     // If it IS displayable, the effect does nothing, and currentQuestion will be derived correctly.
-  }, [
-    currentQuestionIndex,
-    userAnswers,
-    showCompletionScreen,
-    // viewingSpecificAnswersSet removed
-  ]);
+  }, [currentQuestionIndex, userAnswers, showCompletionScreen, currentSessionId]);
 
   const currentQuestion =
     currentQuestionIndex >= 0 &&
@@ -365,6 +360,7 @@ export default function SurveyComponent() {
         findNextDisplayableQuestionIndex={findNextDisplayableQuestionIndex}
         currentQuestionIndex={currentQuestionIndex}
         userAnswers={userAnswers}
+        isOptional={!!currentQuestion?.required_id}
       />
     </div>
   );
