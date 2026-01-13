@@ -23,30 +23,45 @@ export default function SurveyComponent() {
   const [currentLanguage, setCurrentLanguage] = useState<"en" | "th">("th"); // Default server-renderable value
   const [isLanguageInitialized, setIsLanguageInitialized] = useState(false);
 
+  // This `useEffect` hook triggers whenever the `currentLanguage` state changes.
+  // Its purpose is to save the newly selected language to the browser's localStorage.
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("surveyLanguage", currentLanguage);
     }
   }, [currentLanguage]);
 
+  //TODO: change to use date + UUID?
   const [currentSessionId, setCurrentSessionId] = useState<string>(() =>
     generateNewSessionId()
   );
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // Start directly with the first question
+
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
+
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]); // Current session's answers
 
   const [allSurveyResponses, setAllSurveyResponses] =
     useState<AllSurveyResponsesMap>({}); // Default server-renderable value
+
   const [areResponsesInitialized, setAreResponsesInitialized] = useState(false);
 
   const [lastCompletedSessionAnswers, setLastCompletedSessionAnswers] =
     useState<UserAnswer[] | null>(null);
+
   const animatedBoxRef = useRef<HTMLDivElement>(null); // Renamed and will be moved to the outer box
+
   const currentAnimationClassRef = useRef<string | null>(null); // Tracks the currently applied animation class (IN or OUT)
+
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // This `useEffect` hook runs only once after the component mounts because its dependency array is empty.
+  // It's responsible for initializing state from localStorage on the client-side,
+  // such as the saved language and previous survey responses. This prevents hydration mismatches
+  // between the server-rendered and client-rendered output.
   useEffect(() => {
     // Initialize currentLanguage from localStorage on client-side
     const savedLang = localStorage.getItem("surveyLanguage");
@@ -124,19 +139,27 @@ export default function SurveyComponent() {
     setAreResponsesInitialized(true);
   }, []);
 
-  // Initialize totalSessionsCompleted based on loaded allSurveyResponses
+  // This `useMemo` hook calculates the total number of main questions.
+  // Because its dependency array is empty, this calculation runs only once
+  // when the component first renders, and the result is memoized (cached).
   const totalMainQuestions = useMemo(
     () => questionsData.filter((q) => !q.required_id).length,
     [] // questionsData is static, so this runs once
   );
 
+  // This `useMemo` hook calculates the number of main questions the user has answered.
+  // It re-runs the calculation only when the `userAnswers` state changes.
+  // The result is memoized, preventing unnecessary recalculations on other re-renders.
   const answeredMainQuestions = useMemo(() => {
     return userAnswers.filter((ua) => {
       const questionConfig = questionsData.find((q) => q.id === ua.questionId);
       return questionConfig && !questionConfig.required_id;
     }).length;
   }, [userAnswers]);
-  // Effect to handle question skipping and survey completion due to skipping
+  
+  // This `useEffect` hook is the core logic for navigating the survey.
+  // It triggers whenever the question index, user's answers, or completion status change.
+  // Its job is to determine if the current question should be skipped or if the survey is complete.
   useEffect(() => {
     // Skip this effect if not in active questioning phase or on initial welcome screen
     if (
@@ -173,7 +196,12 @@ export default function SurveyComponent() {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1); // This will re-trigger the effect.
     }
     // If it IS displayable, the effect does nothing, and currentQuestion will be derived correctly.
-  }, [currentQuestionIndex, userAnswers, showCompletionScreen, currentSessionId]);
+  }, [
+    currentQuestionIndex,
+    userAnswers,
+    showCompletionScreen,
+    currentSessionId,
+  ]);
 
   const currentQuestion =
     currentQuestionIndex >= 0 &&
@@ -182,6 +210,8 @@ export default function SurveyComponent() {
       ? questionsData[currentQuestionIndex]
       : null;
 
+  // This `useEffect` hook triggers whenever the `allSurveyResponses` state changes.
+  // It saves the complete map of all survey sessions to localStorage.
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
@@ -280,6 +310,9 @@ export default function SurveyComponent() {
     // allSurveyResponses persists across restarts within the same session
   };
 
+  // This `useEffect` hook manages the animations for questions appearing.
+  // It runs whenever the current question changes or when the completion screen is shown.
+  // It adds or removes CSS classes to trigger slide-in animations.
   useEffect(() => {
     const element = animatedBoxRef.current; // Use the ref for the whole box
     if (!element) return;
@@ -325,11 +358,8 @@ export default function SurveyComponent() {
 
   // If not on a special screen, and currentQuestion is null, it means no questions are applicable.
   // (and currentQuestionIndex is not -1, because that's the welcome screen)
-  if (
-    !currentQuestion &&
-    currentQuestionIndex !== -1 &&
-    !showCompletionScreen // viewingSpecificAnswersSet removed
-  ) {
+  if ( !currentQuestion && currentQuestionIndex !== -1 && !showCompletionScreen ) {
+    // viewingSpecificAnswersSet removed
     return (
       <NoApplicableQuestionsView
         currentLanguage={currentLanguage}
